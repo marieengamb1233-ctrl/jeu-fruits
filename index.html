@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deux défauts, deux qualités</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#faf6ee;--card:#fff;--text:#2b2a33;--muted:#6d6a78;--good:#2f8f5b;--goodbg:#dff3e6;--bad:#c4572a;--badbg:#fbe5da;--accent:#5b4bb7;--line:#e4ddd0;--star:#e0a800}
+@media (prefers-color-scheme:dark){:root{--bg:#17161d;--card:#232230;--text:#f0eef6;--muted:#a29fb3;--good:#6fd39b;--goodbg:#1e3a2b;--bad:#f09a6f;--badbg:#412a1e;--accent:#a99cf5;--line:#35334a;--star:#f5c542}}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,"Times New Roman",serif;line-height:1.45}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:.2em 0;text-align:center}
+h2{font-size:1.05rem;margin:18px 0 6px}
+.sub{text-align:center;color:var(--muted);margin:0 0 16px;font-size:.95rem}
+.btn{display:block;width:100%;padding:14px;margin:10px 0;border:0;border-radius:14px;background:var(--accent);color:#fff;font:600 1rem system-ui,sans-serif;cursor:pointer}
+.btn.alt{background:var(--card);color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.4}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{border:2px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 6px;font:500 .95rem system-ui,sans-serif;cursor:pointer;text-align:center}
+.chip small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
+.chip.q{border-color:var(--good);background:var(--goodbg)}
+.chip.d{border-color:var(--bad);background:var(--badbg)}
+.chip.done{border-color:var(--good)}
+.hint{font:.85rem system-ui,sans-serif;color:var(--muted);text-align:center;margin:8px 0}
+.verse{font-style:italic;color:var(--muted);font-size:.9rem}
+.row{display:flex;gap:8px;margin-top:10px}
+input{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:1rem system-ui,sans-serif;width:100%;margin:4px 0}
+.row .btn{width:auto;margin:0;padding:12px 16px}
+.link{background:none;border:0;color:var(--muted);font:.85rem system-ui,sans-serif;text-decoration:underline;cursor:pointer;display:block;margin:14px auto}
+.code{font:800 3rem system-ui,sans-serif;letter-spacing:.2em;text-align:center;color:var(--accent)}
+.stars{display:flex;justify-content:center;gap:4px;margin:8px 0}
+.star{background:none;border:0;font-size:2rem;color:var(--star);cursor:pointer;padding:0 2px}
+.score{font:700 1.1rem system-ui,sans-serif;color:var(--star)}
+.pill{display:inline-block;background:var(--goodbg);color:var(--good);border-radius:99px;padding:4px 10px;margin:3px;font:600 .85rem system-ui,sans-serif}
+.pill.wait{background:var(--card);color:var(--muted);border:1px solid var(--line)}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var CONFIG={apiKey:"AIzaSyAqThOylCOaSQkknw74BbHE4tB5Lcs82FE",authDomain:"deux-1efae.firebaseapp.com",databaseURL:"https://deux-1efae-default-rtdb.firebaseio.com",projectId:"deux-1efae",storageBucket:"deux-1efae.firebasestorage.app",messagingSenderId:"13252982913",appId:"1:13252982913:web:be891bb0c2684e3f783580"};
+var F=[
+["Amour","Égoïsme","Se met parfois un peu trop en avant","Pense aux autres avant lui-même"],
+["Joie","Morosité","Se laisse gagner par la tristesse","Garde la joie même dans les moments difficiles"],
+["Paix","Agitation","Se laisse emporter par le stress","Met de la paix autour de lui"],
+["Patience","Impatience","Est pressé, a du mal à attendre","Sait attendre et supporter les autres"],
+["Bonté","Dureté","Manque parfois de tendresse","Fait du bien concrètement"],
+["Bénignité","Malveillance","Juge vite les autres","Pense et parle en bien des autres"],
+["Fidélité","Inconstance","Oublie parfois ses engagements","On peut compter sur lui"],
+["Douceur","Brusquerie","Réagit vite, le ton est parfois sec","Répond avec calme, même sous pression"],
+["Tempérance","Excès","A du mal à se modérer","Sait se maîtriser"]
+];
+var EX=["Se compare facilement aux autres","A du mal à écouter jusqu’au bout","Parle parfois avant de réfléchir","Remet les choses à plus tard","Arrive souvent en retard","Garde parfois rancune","A du mal à demander pardon","Se décourage vite","S’inquiète beaucoup","Se laisse distraire (téléphone…)","A du mal à dire non","Craint le regard des autres"];
+var NAMES=["Stéphane","Marie-Ange","Francisco","Dylane","Lionel","Othniel","Glory","Juliette","Oriane","Dallouna"];
+var app=document.getElementById("app"),db=null,ref=null,code="",role="",myName="",R={},edit=false,lastSig="",msg="";
+var L={k:-1,q:[],d:[],c:[],sent:false};
+var pid=(function(){var p="";try{p=localStorage.getItem("ddqpid")||""}catch(e){}if(!p){p=Math.random().toString(36).slice(2,10);try{localStorage.setItem("ddqpid",p)}catch(e){}}return p})();
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function clean(s){return String(s).replace(/[.#$\[\]\/]/g,"").trim()}
+function keys(o){return o?Object.keys(o):[]}
+function saveSess(){try{localStorage.setItem("ddqsess",JSON.stringify({role:role,code:code,name:myName}))}catch(e){}}
+function leave(){try{localStorage.removeItem("ddqsess")}catch(e){}if(ref)ref.off();if(ref&&role==="player")ref.child("players/"+pid).remove();ref=null;role="";code="";R={};msg="";home()}
+
+function init(){
+ if(!CONFIG){app.innerHTML='<h1>Configuration manquante</h1><p class="sub">Les réglages Firebase ne sont pas encore dans ce fichier.</p>';return}
+ try{firebase.initializeApp(CONFIG);db=firebase.database()}catch(e){app.innerHTML='<h1>Erreur</h1><p class="sub">Firebase ne démarre pas.</p>';return}
+ var s=null;try{s=JSON.parse(localStorage.getItem("ddqsess")||"null")}catch(e){}
+ if(s&&s.code&&s.role){code=s.code;myName=s.name||"";enter(s.role)}else home();
+}
+function home(){
+ app.innerHTML='<h1>Deux défauts,<br>deux qualités</h1><p class="sub">À la lumière du fruit de l’Esprit (Galates 5.22-23)</p>'+
+ (msg?'<div class="card" style="color:var(--bad)">'+esc(msg)+'</div>':'')+
+ '<div class="card"><b>Rejoindre une partie</b><input id="jc" inputmode="numeric" maxlength="4" placeholder="Code à 4 chiffres"><input id="jn" maxlength="20" placeholder="Ton prénom"><button class="btn" onclick="join()">Rejoindre</button></div>'+
+ '<div class="card"><b>Tu animes la partie ?</b><button class="btn alt" onclick="create()">Créer une partie</button></div>';
+}
+function create(){
+ code=String(1000+Math.floor(Math.random()*9000));
+ db.ref("rooms/"+code).set({created:Date.now(),names:NAMES,cur:{stage:"none",k:0}}).then(function(){enter("host")}).catch(function(){msg="Impossible de créer la partie.";home()});
+}
+function join(){
+ var c=document.getElementById("jc").value.trim(),n=clean(document.getElementById("jn").value);
+ if(!c||!n){msg="Entre le code et ton prénom.";home();return}
+ db.ref("rooms/"+c).once("value").then(function(s){
+  if(!s.exists()){msg="Code introuvable.";home();return}
+  code=c;myName=n;enter("player");
+ }).catch(function(){msg="Connexion impossible.";home()});
+}
+function enter(r){
+ role=r;msg="";ref=db.ref("rooms/"+code);saveSess();
+ if(role==="player"){var pr=ref.child("players/"+pid);pr.set({n:myName});pr.onDisconnect().remove()}
+ ref.on("value",function(s){
+  if(!s.exists()){leave();return}
+  R=s.val();R.cur=R.cur||{stage:"none",k:0};
+  var sig=role+R.cur.stage+R.cur.k;
+  var a=document.activeElement;
+  if(a&&a.tagName==="INPUT"&&sig===lastSig)return;
+  lastSig=sig;draw();
+ });
+}
+function draw(){
+ var keep={};["cf","nn"].forEach(function(id){var e=document.getElementById(id);if(e)keep[id]=e.value});
+ var y=window.scrollY;
+ if(role==="host")hostView();else playerView();
+ for(var id in keep){var e=document.getElementById(id);if(e)e.value=keep[id]}
+ window.scrollTo(0,y);
+}
+function names(){return R.names||[]}
+function players(){return keys(R.players).map(function(k){return R.players[k].n})}
+function votes(){return (R.votes&&R.votes[R.cur.k])||{}}
+
+/* ---------- animateur ---------- */
+function hostView(){
+ var c=R.cur,h='<h1>Animateur</h1><div class="code">'+esc(code)+'</div><p class="sub">Les joueurs ouvrent le lien et tapent ce code.</p>';
+ if(c.stage==="vote"){
+  var v=votes(),ids=keys(R.players),done=ids.filter(function(i){return v[i]}).length;
+  h+='<div class="card" style="text-align:center"><b>On parle de '+esc(c.n)+'</b><div class="score" style="font-size:1.6rem">'+done+' / '+ids.length+' votes</div></div><div class="card">';
+  ids.forEach(function(i){h+='<span class="pill'+(v[i]?'':' wait')+'">'+(v[i]?'✓ ':'… ')+esc(R.players[i].n)+'</span>'});
+  h+='</div><button class="btn" onclick="rev()">Révéler le portrait</button><button class="btn alt" onclick="setCur(\'none\')">Annuler</button>';
+ }else if(c.stage==="reveal"){
+  h+=portrait(true)+'<button class="btn" onclick="setCur(\'none\')">Personne suivante</button>';
+ }else{
+  h+='<div class="card">Connectés ('+players().length+') : '+(players().map(function(n){return '<span class="pill">'+esc(n)+'</span>'}).join("")||'<span class="verse">personne pour l’instant</span>')+'</div>'+
+  '<h2>Qui est à l’honneur ?</h2><div class="grid">';
+  names().forEach(function(n,i){var r=R.res&&R.res[n];
+   h+='<button class="chip'+(edit?' d':(r?' done':''))+'" onclick="'+(edit?'delName':'target')+'('+i+')">'+esc(n)+(edit?'<small>✕ retirer</small>':(r?'<small>✓ '+r+'/5</small>':''))+'</button>'});
+  h+='</div><div class="row"><input id="nn" maxlength="20" placeholder="Ajouter un prénom (qui est présent ?)"><button class="btn alt" onclick="addName()">Ajouter</button></div>'+
+  '<button class="btn alt" onclick="edit=!edit;draw()">'+(edit?'Terminé':'Retirer des prénoms')+'</button>'+avg();
+ }
+ h+='<button class="link" onclick="leave()">Quitter la partie</button>';
+ app.innerHTML=h;
+}
+function avg(){var t=0,n=0;keys(R.res).forEach(function(k){t+=R.res[k];n++});return n?'<div class="card" style="text-align:center">Note moyenne du groupe<div class="score" style="font-size:1.6rem">'+(t/n).toFixed(1)+' / 5</div></div>':''}
+function setCur(st,n){ref.child("cur").set({stage:st,n:n||"",k:Date.now()})}
+function target(i){setCur("vote",names()[i])}
+function rev(){ref.child("cur").update({stage:"reveal"})}
+function addName(){var v=clean(document.getElementById("nn").value);var a=names().slice();if(v&&a.indexOf(v)<0){a.push(v);ref.child("names").set(a)}}
+function delName(i){var a=names().slice();a.splice(i,1);ref.child("names").set(a)}
+function rate(k){ref.child("res/"+R.cur.n).set(k)}
+
+/* ---------- résultat ---------- */
+function portrait(isHost){
+ var v=votes(),q={},d={},c={},ids=keys(v);
+ ids.forEach(function(i){var x=v[i];(x.q||[]).forEach(function(k){q[k]=(q[k]||0)+1});(x.d||[]).forEach(function(k){d[k]=(d[k]||0)+1});(x.c||[]).forEach(function(t){var key=t.toLowerCase();c[key]=c[key]||{t:t,n:0};c[key].n++})});
+ var tq=keys(q).map(function(k){return{k:+k,n:q[k]}}).sort(function(a,b){return b.n-a.n}).slice(0,2);
+ var td=keys(d).map(function(k){return{t:F[k][2],s:F[k][1],n:d[k]}}).concat(keys(c).map(function(k){return{t:c[k].t,s:"",n:c[k].n}})).sort(function(a,b){return b.n-a.n}).slice(0,2);
+ var nm=esc(R.cur.n),note=R.res&&R.res[R.cur.n]||0;
+ var h='<h1>Le portrait de '+nm+'</h1><p class="sub">'+ids.length+' vote(s)</p><div class="card"><b style="color:var(--good)">Ce que '+nm+' manifeste de bon</b>';
+ tq.forEach(function(x){h+='<p><b>'+F[x.k][0]+'</b> <span class="verse">('+x.n+' vote'+(x.n>1?'s':'')+')</span><br><span class="verse">'+F[x.k][3]+'</span></p>'});
+ if(!tq.length)h+='<p class="verse">Aucun vote.</p>';
+ h+='</div><div class="card"><b style="color:var(--bad)">Pour grandir ensemble</b>';
+ td.forEach(function(x){h+='<p>'+esc(x.t)+' <span class="verse">('+x.n+' vote'+(x.n>1?'s':'')+')</span>'+(x.s?'<br><span class="verse">'+x.s.toLowerCase()+'</span>':'')+'</p>'});
+ if(!td.length)h+='<p class="verse">Aucun vote.</p>';
+ h+='</div><div class="card" style="text-align:center"><b>'+nm+', ce portrait te ressemble à quel point ?</b><div class="stars">';
+ for(var k=1;k<=5;k++)h+='<button class="star" '+(isHost?'onclick="rate('+k+')"':'disabled')+'>'+(k<=note?'★':'☆')+'</button>';
+ return h+'</div><div class="score">'+(note?note+' / 5':'Pas encore noté')+'</div></div>';
+}
+
+/* ---------- joueur ---------- */
+function playerView(){
+ var c=R.cur;
+ if(L.k!==c.k){L={k:c.k,q:[],d:[],c:[],sent:!!(c.stage==="vote"&&votes()[pid])}; if(L.sent){var m=votes()[pid];L.q=m.q||[];L.d=m.d||[];L.c=m.c||[]}}
+ var h='<h1>'+esc(myName)+'</h1>';
+ if(c.stage==="vote")h+=voteForm();
+ else if(c.stage==="reveal")h+=portrait(false);
+ else h+='<div class="card" style="text-align:center">En attente de l’animateur…<br><span class="verse">'+players().length+' joueur(s) connecté(s)</span></div>';
+ app.innerHTML=h+'<button class="link" onclick="leave()">Quitter la partie</button>';
+}
+function voteForm(){
+ var n=esc(R.cur.n),full=L.d.length+L.c.length>=2;
+ var h='<p class="hint">Vote en privé. Sois sincère et bienveillant.</p><h2>Que manifeste '+n+' de bon ? <span class="verse">(2 choix)</span></h2><div class="grid">';
+ F.forEach(function(f,i){h+='<button class="chip'+(L.q.indexOf(i)>-1?' q':'')+'" onclick="tg(\'q\','+i+')">'+f[0]+'</button>'});
+ h+='</div><h2>Que manifeste '+n+' de moins bon ? <span class="verse">(2 choix, dits avec douceur)</span></h2><div class="grid">';
+ F.forEach(function(f,i){h+='<button class="chip'+(L.d.indexOf(i)>-1?' d':'')+'" onclick="tg(\'d\','+i+')">'+f[2]+'<small>'+f[1]+'</small></button>'});
+ h+='</div><h2>Un autre défaut ? <span class="verse">(libre choix)</span></h2>';
+ if(L.c.length){h+='<div class="grid">';L.c.forEach(function(t,k){h+='<button class="chip d" onclick="delC('+k+')">'+esc(t)+'<small>Appuie pour retirer</small></button>'});h+='</div>'}
+ if(!full){h+='<div class="hint">Ou choisis dans cette liste :</div><div class="grid">';EX.forEach(function(t,k){if(L.c.indexOf(t)<0)h+='<button class="chip" onclick="addX('+k+')">'+esc(t)+'</button>'});h+='</div><div class="row"><input id="cf" maxlength="60" placeholder="Écris un défaut (dit avec douceur)"><button class="btn alt" onclick="addC()">Ajouter</button></div>'}
+ var ok=L.q.length==2&&L.d.length+L.c.length==2;
+ return h+'<button class="btn" '+(ok?'':'disabled')+' onclick="send()">'+(L.sent?'Modifier mon vote':'Envoyer mon vote')+'</button>'+(L.sent?'<div class="hint">✓ Vote envoyé. Attends la révélation.</div>':'');
+}
+function tg(t,i){var a=L[t],k=a.indexOf(i);if(k>-1)a.splice(k,1);else if(a.length+(t==="d"?L.c.length:0)<2)a.push(i);L.sent=false;draw()}
+function addX(k){if(L.d.length+L.c.length<2&&L.c.indexOf(EX[k])<0){L.c.push(EX[k]);L.sent=false;draw()}}
+function addC(){var v=document.getElementById("cf").value.trim();if(v&&L.d.length+L.c.length<2){L.c.push(v);L.sent=false;document.getElementById("cf").value="";draw()}}
+function delC(k){L.c.splice(k,1);L.sent=false;draw()}
+function send(){ref.child("votes/"+R.cur.k+"/"+pid).set({q:L.q,d:L.d,c:L.c}).then(function(){L.sent=true;draw()})}
+init();
+</script>
+</body>
+</html>
